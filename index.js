@@ -29,6 +29,8 @@ async function run() {
     const database = client.db("CoffeeDB");
     const coffeeCollection = database.collection("coffee")
 
+    const userCollection = client.db("CoffeeDB").collection("users");
+
     app.post('/coffee',async(req,res)=>{
       const coffee = req.body;
       console.log(coffee)
@@ -77,6 +79,63 @@ async function run() {
        
       }
       const result = await coffeeCollection.updateOne(query,coffee,options)
+      res.send(result)
+    })
+
+
+    // User Related APIs
+
+    app.post('/users',async(req,res)=>{
+      const users = req.body;
+      const result = await userCollection.insertOne(users)
+      res.send(result)
+    })
+
+    app.get('/users',async(req,res)=>{
+     
+      const cursor = userCollection.find()
+      const result = await cursor.toArray()
+      res.send(result)
+    })
+
+    app.get('/users/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await userCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.put('/users/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const options = {upsert: true};
+      const user = req.body
+      const users= {
+        $set: {
+          name:user.name,
+          email: user.email,
+        }
+      }
+      const result = await userCollection.updateOne(query,users,options)
+      res.send(result)
+    })
+
+    app.delete('/users/:id',async(req,res)=>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)}
+        const result = await userCollection.deleteOne(query)
+        res.send(result)
+    })
+
+    app.patch('/users',async(req,res)=>{
+      const email = req.body.email;
+      const filter = {email}
+      const updatedDoc = {
+        $set:{
+          lastSignInTime: req.body?.lastSignInTime
+        }
+      }
+      const result = await userCollection.updateOne(filter,updatedDoc)
       res.send(result)
     })
     // Send a ping to confirm a successful connection
